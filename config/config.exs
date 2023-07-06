@@ -8,3 +8,12 @@ config :tailwind, version: "3.3.2", default: [
   ),
   cd: Path.expand("../assets", __DIR__)
 ]
+
+config :esbuild,
+  version: "0.17.11",
+  default: [
+    args:
+      ~w(js/app.js --bundle --target=es2017 --outfile=../priv/static/live_view_grid.js --external:/fonts/* --external:/images/*),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
