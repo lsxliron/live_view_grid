@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "typeRoots": ["types.d.ts", "node_modules/@types"],
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM"]
+  }
+}
