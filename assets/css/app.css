@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* overriding table-dragger styles */
+
+.gu-mirror {
+  max-height: 80vh;
+  width: 100%;
+  overflow: hidden;
+}
+.sindu_column {
+  max-height: 80vh;
+  width: 100%;
+  overflow: hidden;
+}
