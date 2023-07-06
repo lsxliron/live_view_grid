@@ -27,3 +27,6 @@ live_view_grid-*.tar
 
 # Elixir language server
 .elixir_ls
+
+.DS_Store
+node_modules

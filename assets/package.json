@@ -1,0 +1,15 @@
+{
+  "name": "live_view_grid",
+  "version": "0.0.1",
+  "description": "Grid component for Phoenix LiveView",
+  "main": "a.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "phoenix_live_view": "^0.19.3",
+    "table-dragger": "^1.0.3"
+  }
+}
