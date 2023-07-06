@@ -109,7 +109,7 @@ defmodule LiveViewGrid do
                        id={"#{@socket.id}-paginator"}
                        current_page={Map.get(assigns, :current_page, 1)}
                        pages={Map.get(assigns, :total_pages, 1)}
-                       prefix={@prefix}
+                       prefix={Map.get(assigns, :prefix)}
                        total={Map.get(assigns, :total_rows, 1)} />
     </div>
     """

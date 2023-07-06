@@ -205,15 +205,18 @@ defmodule LiveViewGrid.Utils do
   end
 
   @doc false
-  def handle_params(params, _uri, socket) do
+  def handle_params(params, uri, socket) do
     # adds the `page` url parameter
     if not connected?(socket) do
       {:noreply, socket}
     else
+      prefix = get_prefix(uri, socket)
+      socket = socket |> assign_new(:prefix, fn _ -> prefix end)
+
       # If page is not provided, redirect to the first page
       case Map.get(params, "page") do
         nil ->
-          {:noreply, socket |> push_patch(to: "#{socket.assigns.prefix}/?page=1")}
+          {:noreply, socket |> push_patch(to: "#{prefix}/?page=1")}
 
         page ->
           case parse_page(page) do
@@ -224,7 +227,7 @@ defmodule LiveViewGrid.Utils do
               {:noreply,
                socket
                |> put_flash(:error, "#{page} is not a valid page number")
-               |> push_patch(to: "#{socket.assigns.prefix}/?page=1")}
+               |> push_patch(to: "#{prefix}/?page=1")}
           end
       end
     end
@@ -311,6 +314,72 @@ defmodule LiveViewGrid.Utils do
   defp get_cols_cache(cols) do
     # Generates the columns cache that is used when re-ordering columns
     Enum.into(cols, %{}, &{elem(&1, 1), elem(&1, 0)})
+  end
+
+  @doc """
+  Extracts the host from the URI object
+
+  ## Parameters
+  - `socket` - the LiveView socket
+
+  ## Examples
+  ```iex
+  iex> host_uri = %URI{scheme: "http", host: "localhost", port: nil}
+  iex> socket = %Phoenix.LiveView.Socket{host_uri: host_uri}
+  iex> get_host(socket)
+  "http://localhost"
+
+  iex> host_uri = %URI{scheme: "https", host: "localhost", port: 443}
+  iex> socket = %Phoenix.LiveView.Socket{host_uri: host_uri}
+  iex> get_host(socket)
+  "https://localhost"
+
+  iex> host_uri = %URI{scheme: "http", host: "localhost", port: 4000}
+  iex> socket = %Phoenix.LiveView.Socket{host_uri: host_uri}
+  iex> get_host(socket)
+  "http://localhost:4000"
+  ```
+  """
+  @spec get_host(Phoenix.LiveView.Socket.t()) :: String.t()
+  def get_host(socket) do
+    %{scheme: scheme, host: host, port: port} = socket.host_uri
+
+    case socket.host_uri.port do
+      p when p == 80 or p == 443 or is_nil(p) -> "#{scheme}://#{host}"
+      _ -> "#{scheme}://#{host}:#{port}"
+    end
+  end
+
+  @doc """
+  Returns the URI prefix without the host
+
+  ## Parameters
+  - `uri` - the full current URI
+  - `socket` - the LiveView socket
+
+  ## Examples
+
+  ```
+  iex> host_uri = %URI{
+  ...>     scheme: "https",
+  ...>     host: "my-site.com",
+  ...>     port: 443
+  ...>   }
+  iex> uri = "https://my-site.com/path/to/grid?page=1"
+  iex> socket = %Phoenix.LiveView.Socket{host_uri: host_uri}
+  iex> get_prefix(uri, socket)
+  "/path/to/grid"
+
+
+  """
+  @spec get_prefix(URI.t(), Phoenix.LiveView.Socket.t()) :: String.t()
+  def get_prefix(uri, socket) do
+    host = get_host(socket)
+
+    String.replace(uri, host, "")
+    |> String.split("?")
+    |> Enum.at(0)
+    |> String.trim_trailing("/")
   end
 
   @doc """
