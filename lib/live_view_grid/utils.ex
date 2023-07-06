@@ -369,7 +369,7 @@ defmodule LiveViewGrid.Utils do
   iex> socket = %Phoenix.LiveView.Socket{host_uri: host_uri}
   iex> get_prefix(uri, socket)
   "/path/to/grid"
-
+  ```
 
   """
   @spec get_prefix(URI.t(), Phoenix.LiveView.Socket.t()) :: String.t()
