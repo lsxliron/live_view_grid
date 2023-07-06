@@ -39,12 +39,14 @@ defmodule LiveViewGrid.MixProject do
       {:phoenix_live_view, "~> 0.19.3"},
       {:excoveralls, "~> 0.10", only: :test},
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
-      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev}
+      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
     ]
   end
 
   defp aliases() do[
-    "assets.deploy": ["tailwind default --minify"]
+    build_assets: ["tailwind default --minify", "esbuild default --minify"],
+    build: ["build_assets", "compile"]
   ]
 
   end
