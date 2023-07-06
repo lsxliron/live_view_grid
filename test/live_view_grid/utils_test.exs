@@ -16,6 +16,8 @@ defmodule LiveViewGrid.UtilsTest do
     |> LiveViewGrid.Utils.init_grid(@cols)
   end
 
+  defp get_host_uri(), do: %URI{scheme: "http", host: "localhost", port: nil}
+
   describe "get_total_pages/1" do
     test "pagination object does not exist" do
       assert LiveViewGrid.Utils.get_total_pages(%{"pagination" => []}) == 1
@@ -141,9 +143,13 @@ defmodule LiveViewGrid.UtilsTest do
     end
 
     test "adding page as URL param if not provided" do
-      socket = get_socket() |> Map.put(:transport_pid, IEx.Helpers.pid(0, 0, 0))
+      socket =
+        get_socket()
+        |> Map.put(:transport_pid, IEx.Helpers.pid(0, 0, 0))
+        |> Map.put(:host_uri, get_host_uri())
+
       {:noreply, socket} = LiveViewGrid.Utils.handle_params(%{}, "/", socket)
-      assert socket.redirected == {:live, :patch, %{kind: :push, to: "/dummy/?page=1"}}
+      assert socket.redirected == {:live, :patch, %{kind: :push, to: "/?page=1"}}
       assert Map.get(socket.assigns, :flash) |> is_nil()
     end
 
@@ -152,9 +158,10 @@ defmodule LiveViewGrid.UtilsTest do
         get_socket()
         |> update_in([Access.key(:assigns), Access.key(:flash)], fn _ -> %{} end)
         |> Map.put(:transport_pid, IEx.Helpers.pid(0, 0, 0))
+        |> Map.put(:host_uri, get_host_uri())
 
       {:noreply, socket} = LiveViewGrid.Utils.handle_params(%{"page" => "abc"}, "/", socket)
-      assert socket.redirected == {:live, :patch, %{kind: :push, to: "/dummy/?page=1"}}
+      assert socket.redirected == {:live, :patch, %{kind: :push, to: "/?page=1"}}
       assert socket.assigns.flash == %{"error" => "abc is not a valid page number"}
     end
 
@@ -166,6 +173,7 @@ defmodule LiveViewGrid.UtilsTest do
         |> assign(:get_data, get_data)
         |> update_in([Access.key(:assigns), Access.key(:flash)], fn _ -> %{} end)
         |> Map.put(:transport_pid, IEx.Helpers.pid(0, 0, 0))
+        |> Map.put(:host_uri, get_host_uri())
 
       {:noreply, socket} = LiveViewGrid.Utils.handle_params(%{"page" => "4"}, "/", socket)
       assert Map.get(socket.assigns, :flash) == %{}
