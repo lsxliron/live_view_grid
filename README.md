@@ -38,8 +38,23 @@ be found at <https://hexdocs.pm/live_view_grid>. -->
 2. Add the grid stylesheet to the desired layout file (e.g. `root.html.heex`)
    ```elixir
    <link phx-track-static rel="stylesheet" href={~p"/assets/live_view_grid.css"} />
+   <script type="text/javascript" src={~p"/assets/live_view_grid.js"}></script>
    ```
 
+3. Use the provided hook so columns will be draggable
+
+   ```javascript
+   // app.js
+   Hooks = {}
+   Hooks.Draggable = window.LiveViewGrid.Draggable
+   // ...
+
+   let liveSocket = new LiveSocket("/live", Socket, {
+     params: { _csrf_token: csrfToken },
+     hooks: Hooks
+   })
+
+   
 ## Usage
 
 ```elixir
