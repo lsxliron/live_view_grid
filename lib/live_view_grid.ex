@@ -34,50 +34,39 @@ defmodule LiveViewGrid do
   def render(assigns) do
     ~H"""
     <div>
-      <div class="h-[90vh] max-h-[90vh] block flow-root w-full w-fit overflow-auto text-sm">
+      <div class="h-[90vh] max-h-[90vh] block flow-root w-full w-fit overflow-auto text-sm draggable-table-root">
         <form phx-change="filter">
-          <table class="table w-full min-w-full divide-y divide-gray-300" phx-hook="Draggable" id={@id}>
-            <thead class="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 px-3 py-2 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter">
-              <tr>
-                <th :for={{col_attr, col_name} <- @cols}>
-                  <div
-                    class="flex items-center justify-between px-2"
-                    phx-click="update-sort"
-                    phx-value-column={col_attr}
-                  >
-                    <p class="table-header mr-4 flex grow items-center whitespace-nowrap text-sm hover:cursor-pointer">
-                      <%= col_name %>
-                      <div class="flex w-full justify-between px-4">
-                        <%= if String.to_existing_atom(col_attr) in OrdMap.keys(@order_by) do %>
-                          <%= if OrdMap.get(@order_by, String.to_existing_atom(col_attr))==1 do %>
-                            <span class="material-symbols-outlined">
-                              arrow_upward_alt
-                            </span>
-                          <% else %>
-                            <span class="material-symbols-outlined">
-                              arrow_downward_alt
-                            </span>
-                          <% end %>
-                          <p>
-                            <%= 1 +
-                              (@order_by
-                              |> OrdMap.keys()
-                              |> Enum.find_index(&(&1 == String.to_existing_atom(col_attr)))) %>
-                          </p>
-                        <% end %>
-                      </div>
-                    </p>
-                    <p class="flex-initial">
-                      <span class="material-symbols-outlined drag-handle text-sm hover:cursor-grab">
-                        menu
-                      </span>
-                    </p>
+          <div id="table" class="inline-flex bg-white p-2.5" phx-hook="Draggable" id={@id}>
+            <%= for {col_attr, col_name} <- @cols do %>
+              <div class="sortable-table-column">
+                <div class="sticky top-0 z-10 bg-white bg-opacity-75">
+                  <div phx-click="update-sort"
+                      phx-value-column={col_attr}
+                      class="draggable-table-header break-keep whitespace-nowrap border-b border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter justify-between flex gap-4 h-9">
+                    <p class="draggable-column-header-title"><%= col_name %></p>
+                    <%= if String.to_existing_atom(col_attr) in OrdMap.keys(@order_by) do %>
+                      <%= if OrdMap.get(@order_by, String.to_existing_atom(col_attr))==1 do %>
+                        <span class="material-symbols-outlined">
+                          arrow_upward_alt
+                        </span>
+                      <% else %>
+                        <span class="material-symbols-outlined">
+                          arrow_downward_alt
+                        </span>
+                      <% end %>
+                      <p>
+                        <%= 1 +
+                          (@order_by
+                          |> OrdMap.keys()
+                          |> Enum.find_index(&(&1 == String.to_existing_atom(col_attr)))) %>
+                      </p>
+                    <% end %>
+                    <span class="material-symbols-outlined drag-handle text-sm hover:cursor-grab">
+                      menu
+                    </span>
                   </div>
-                </th>
-              </tr>
 
-              <tr>
-                <th class="px-1" :for={{col_attr, _col_name} <- @cols}>
+
                   <input
                     class="border-1 w-full rounded-md border-stone-200 text-xs outline-none outline-none ring-0 focus:border-none focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     type="text"
@@ -86,25 +75,21 @@ defmodule LiveViewGrid do
                     value={Map.get(@filter_by, col_attr, "")}
                     name={col_attr}
                   />
-                </th>
-              </tr>
-            </thead>
 
-            <tbody
-              id={"#{@id}-body"}
-              class="relative mt-12 divide-y divide-gray-200 overflow-y-auto bg-white"
-            >
-              <tr :for={d <- @data}>
-                <%= for k <- Enum.map(@cols, &elem(&1, 0)) do %>
-                  <td class="whitespace-nowrap border-b border-gray-200 px-3 py-1 text-sm text-gray-500 sm:table-cell">
-                    <%= Map.get(d, k) %>
-                  </td>
+                </div>
+
+                <%= for {row, i} <- @data |> Enum.with_index() do %>
+                  <div data-row-index={i}
+                       class={"sortable-table-cell bg-white flex-1 whitespace-nowrap border-b border-gray-200 px-3 py-1 text-sm text-gray-500 h-[1.8rem] cursor-pointer"}
+                    ><%= Map.get(row, col_attr) %></div>
                 <% end %>
-              </tr>
-            </tbody>
-          </table>
+              </div>
+            <% end %>
+          </div>
         </form>
       </div>
+
+
       <.live_component module={LiveViewGrid.Paginator}
                        id={"#{@socket.id}-paginator"}
                        current_page={Map.get(assigns, :current_page, 1)}
