@@ -44,7 +44,7 @@ defmodule LiveViewGrid do
                       phx-value-column={col_attr}
                       class="draggable-table-header break-keep whitespace-nowrap border-b border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter justify-between flex gap-4 h-9">
                     <p class="draggable-column-header-title"><%= col_name %></p>
-                    <%= if String.to_existing_atom(col_attr) in OrdMap.keys(@order_by) do %>
+                    <%= if String.to_atom(col_attr) in OrdMap.keys(@order_by) do %>
                       <%= if OrdMap.get(@order_by, String.to_existing_atom(col_attr))==1 do %>
                         <span class="material-symbols-outlined">
                           arrow_upward_alt
