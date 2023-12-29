@@ -36,11 +36,13 @@ defmodule LiveViewGrid.MixProject do
     [
       {:ord_map, "~> 0.1"},
       {:phoenix, "~> 1.7"},
-      {:phoenix_live_view, "~> 0.19.3"},
+      {:phoenix_live_view, "~> 0.19"},
       {:excoveralls, "~> 0.10", only: :test},
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
       {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
+      {:tailwind_formatter, "~> 0.3.6", only: [:dev, :test], runtime: false},
+      {:timex, "~> 3.7"}
     ]
   end
 
