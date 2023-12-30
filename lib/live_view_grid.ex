@@ -6,43 +6,56 @@ defmodule LiveViewGrid do
   A tabular grid to render data
   """
 
-  attr(:id, :string, required: true, doc: "the element ID")
+  def get_filter_component_for_type(:text),  do: LiveViewGrid.Components.TextFilter
+  def get_filter_component_for_type("text"),  do: LiveViewGrid.Components.TextFilter
+  def get_filter_component_for_type(:date),  do: LiveViewGrid.Components.DateFilter
+  def get_filter_component_for_type("date"),  do: LiveViewGrid.Components.DateFilter
+  def get_filter_component_for_type(:number),  do: LiveViewGrid.Components.NumberFilter
+  def get_filter_component_for_type("number"),  do: LiveViewGrid.Components.NumberFilter
 
-  attr(:cols, :list,
+
+  def handle_event("show_filter", %{"field_name"=>field_name, "data_type" => data_type}=_params, socket) do
+    {send_update(get_filter_component_for_type(data_type), id: field_name, visible: true)}
+    {:noreply, socket}
+  end
+
+
+  attr :id, :string, required: true, doc: "the element ID"
+
+  attr :cols, :list,
     required: true,
     doc:
       "an array of tuples where the first element is the attribute name and the second element is the column name"
-  )
 
-  attr(:data, :list, required: true, doc: "a list of maps where every map is a row")
+  attr :data, :list, required: true, doc: "a list of maps where every map is a row"
 
-  attr(:order_by, :map,
+  attr :order_by, :map,
     required: false,
     default: OrdMap.new(%{booking_date: -1}),
     examples: [%{"my_field" => 1, "my_other_filed" => -1}],
     doc:
       "a map where the keys are the attribute names and the values are `1` for sorting in ascending order and `-1` for descending"
-  )
 
-  attr(:filter_by, :map,
+  attr :filter_by, :map,
     required: false,
     default: %{},
     doc: "a map where the keys are the attribute names and the values are strings to filter by",
     examples: [%{"my_field" => "abc"}]
-  )
 
   def render(assigns) do
     ~H"""
     <div>
-      <div class="h-[90vh] max-h-[90vh] block flow-root w-full w-fit overflow-auto text-sm draggable-table-root">
-        <form phx-change="filter">
+      <div class="h-[90vh] max-h-[90vh] draggable-table-root block flow-root w-full w-fit overflow-auto text-sm">
+        <div>
           <div id="table" class="inline-flex bg-white p-2.5" phx-hook="Draggable" id={@id}>
-            <%= for {col_attr, col_name} <- @cols do %>
-              <div class="sortable-table-column">
+            <%= for %LiveViewGrid.ColDef{field: col_attr, header: col_name, data_type: data_type} <- @cols do %>
+              <div class="sortable-table-column" x-data={"{#{col_attr}_open: false}"}>
                 <div class="sticky top-0 z-10 bg-white bg-opacity-75">
-                  <div phx-click="update-sort"
-                      phx-value-column={col_attr}
-                      class="draggable-table-header break-keep whitespace-nowrap border-b border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter justify-between flex gap-4 h-9">
+                  <div
+                    phx-click="update-sort"
+                    phx-value-column={col_attr}
+                    class="draggable-table-header break-keep flex h-9 justify-between gap-4 whitespace-nowrap border-b border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter"
+                  >
                     <p class="draggable-column-header-title"><%= col_name %></p>
                     <%= if String.to_atom(col_attr) in OrdMap.keys(@order_by) do %>
                       <%= if OrdMap.get(@order_by, String.to_existing_atom(col_attr))==1 do %>
@@ -57,16 +70,27 @@ defmodule LiveViewGrid do
                       <p>
                         <%= 1 +
                           (@order_by
-                          |> OrdMap.keys()
-                          |> Enum.find_index(&(&1 == String.to_existing_atom(col_attr)))) %>
+                           |> OrdMap.keys()
+                           |> Enum.find_index(&(&1 == String.to_existing_atom(col_attr)))) %>
                       </p>
                     <% end %>
-                    <span class="material-symbols-outlined drag-handle text-sm hover:cursor-grab">
-                      menu
-                    </span>
+                    <div>
+                      <span
+                        class="material-symbols-outlined text-sm hover:cursor-pointer"
+                        phx-click="show_filter"
+                        phx-target={@myself}
+                        phx-value-field_name={"filter_#{col_attr}"}
+                        phx-value-data_type={data_type}
+                      >
+                        filter_alt
+                      </span>
+                      <span class="material-symbols-outlined drag-handle text-sm hover:cursor-grab">
+                        menu
+                      </span>
+                    </div>
                   </div>
 
-
+                  <%!--
                   <input
                     class="border-1 w-full rounded-md border-stone-200 text-xs outline-none outline-none ring-0 focus:border-none focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     type="text"
@@ -74,28 +98,77 @@ defmodule LiveViewGrid do
                     phx-debounce="300"
                     value={Map.get(@filter_by, col_attr, "")}
                     name={col_attr}
-                  />
+                  /> --%>
+                    <.live_component module={get_filter_component_for_type(data_type)} column_name={col_name} field_name={col_attr} id={"filter_#{col_attr}"} parent={self()}/>
 
+
+                  <%!-- <div class="relative block h-2">
+                    <div
+                      class="min-w-48 absolute z-10 m-2 m-8 -translate-y-8 p-2 text-center p-2 border rounded-md bg-white border-black shadow-lg"
+                      x-show={"#{col_attr}_open"}
+                      @click.outside={"#{col_attr}_open = false"}
+                    >
+                    <p class="tex-sm text-black mb-2">Filters for <%= col_name %></p>
+                      <select class="mb-1 w-full rounded-md p-1 text-xs">
+                        <option value="contains">Contains</option>
+                        <option value="not_contains">Not Contains</option>
+                        <option value="equals">Equals</option>
+                        <option value="not_equals">Not Equals</option>
+                        <option value="not_equals">Blank</option>
+                        <option value="blank">Not Blank</option>
+                        <option value="not_blank">Not Blank</option>
+                      </select>
+                      <input
+                        type="text"
+                        class="border-1 mb-1 w-full rounded-md border-stone-200 p-1 text-xs outline-none outline-none ring-0 focus:border-none focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      />
+
+                      <div class="flex justify-center gap-4">
+                        <div>
+                          <input
+                            type="radio"
+                            name={"#{col_attr}_combine"}
+                            value="and"
+                            id={"#{col_attr}_and"}
+                          />
+                          <label for={"#{col_attr}_and"}>AND</label>
+                        </div>
+                        <div>
+                          <input
+                            type="radio"
+                            name={"#{col_attr}_combine"}
+                            value="or"
+                            id={"#{col_attr}_or"}
+                          />
+                          <label for={"#{col_attr}_or"}>OR</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div> --%>
                 </div>
 
                 <%= for {row, i} <- @data |> Enum.with_index() do %>
-                  <div data-row-index={i}
-                       class={"sortable-table-cell bg-white flex-1 whitespace-nowrap border-b border-gray-200 px-3 py-1 text-sm text-gray-500 h-[1.8rem] cursor-pointer"}
-                    ><%= Map.get(row, col_attr) %></div>
+                  <div
+                    data-row-index={i}
+                    class="sortable-table-cell h-[1.8rem] flex-1 cursor-pointer whitespace-nowrap border-b border-gray-200 bg-white px-3 py-1 text-sm text-gray-500"
+                  >
+                    <%= Map.get(row, col_attr) %>
+                  </div>
                 <% end %>
               </div>
             <% end %>
           </div>
-        </form>
+        </div>
       </div>
 
-
-      <.live_component module={LiveViewGrid.Paginator}
-                       id={"#{@socket.id}-paginator"}
-                       current_page={Map.get(assigns, :current_page, 1)}
-                       pages={Map.get(assigns, :total_pages, 1)}
-                       prefix={Map.get(assigns, :prefix)}
-                       total={Map.get(assigns, :total_rows, 1)} />
+      <.live_component
+        module={LiveViewGrid.Paginator}
+        id={"#{@socket.id}-paginator"}
+        current_page={Map.get(assigns, :current_page, 1)}
+        pages={Map.get(assigns, :total_pages, 1)}
+        prefix={Map.get(assigns, :prefix)}
+        total={Map.get(assigns, :total_rows, 1)}
+      />
     </div>
     """
   end
