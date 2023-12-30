@@ -134,19 +134,25 @@ defmodule LiveViewGrid.Utils do
   """
   @spec add_basic_filter(list(), Phoenix.LiveView.Socket.t()) :: list()
   def add_basic_filter(query, socket) do
-    case Map.keys(socket.assigns.filter_by) |> length do
-      0 ->
-        query
+    # TODO: document, this is new implementation
+    active_filters =
+      socket.assigns.cols
+      |> Enum.filter(&(&1.filter.enabled == true))
+      |> Enum.map(fn col ->
+        case col.data_type do
+          :text -> LiveViewGrid.Filters.Text.get_query(col.filter, col.field)
+          :date -> LiveViewGrid.Filters.Date.get_query(col.filter, col.field)
+          :number -> LiveViewGrid.Filters.Number.get_query(col.filter, col.field)
+        end
+      end)
 
-      _ ->
-        filters =
-          for {k, v} <- socket.assigns.filter_by do
-            lookup = %{"$regex": ".*#{v}.*", "$options": "i"}
-            Map.new() |> Map.put(k, lookup)
-          end
+    Logger.debug("active filters: #{inspect(active_filters)}")
 
-        match = %{"$match": %{"$and": filters}}
-        List.insert_at(query, length(query) - 1, match)
+    if length(active_filters) == 0 do
+      query
+    else
+      match = %{"$match": %{"$and": active_filters}}
+      List.insert_at(query, length(query) - 1, match)
     end
   end
 
@@ -311,11 +317,6 @@ defmodule LiveViewGrid.Utils do
      |> paginate(socket.assigns.current_page)}
   end
 
-  defp get_cols_cache(cols) do
-    # Generates the columns cache that is used when re-ordering columns
-    Enum.into(cols, %{}, &{elem(&1, 1), elem(&1, 0)})
-  end
-
   @doc """
   Extracts the host from the URI object
 
@@ -372,7 +373,7 @@ defmodule LiveViewGrid.Utils do
   ```
 
   """
-  @spec get_prefix(URI.t(), Phoenix.LiveView.Socket.t()) :: String.t()
+  @spec get_prefix(String.t(), Phoenix.LiveView.Socket.t()) :: String.t()
   def get_prefix(uri, socket) do
     host = get_host(socket)
 
@@ -394,15 +395,16 @@ defmodule LiveViewGrid.Utils do
   """
   @spec init_grid(Phoenix.LiveView.Socket.t(), list(tuple)) :: Phoenix.LiveView.Socket.t()
   def init_grid(socket, cols) do
+    initialized_cols = cols |> Enum.map(&LiveViewGrid.ColDef.init/1)
+
     socket
-    |> assign(:cols, cols)
+    |> assign(:cols, initialized_cols)
     |> assign_new(:current_page, fn _ -> 1 end)
     |> assign_new(:filter_by, fn _ -> %{} end)
     |> assign_new(:order_by, fn _ -> OrdMap.new(%{}) end)
     |> assign_new(:per_page, fn _ -> 100 end)
     |> assign_new(:total_pages, fn _ -> 1 end)
     |> assign_new(:total_rows, fn _ -> 1 end)
-    |> assign(:cols_cache, get_cols_cache(cols))
   end
 
   @doc """
