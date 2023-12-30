@@ -262,6 +262,13 @@ defmodule LiveViewGrid.Utils do
      |> push_patch(to: "#{socket.assigns.prefix}/?page=1")}
   end
 
+  @spec column_sorter(list(String.t())) :: fun()
+  def column_sorter(all_column) do
+    fn col_def ->
+      Enum.find_index(all_column, &(col_def.header == &1))
+    end
+  end
+
   @doc """
 
   Updated the columns order
@@ -272,11 +279,9 @@ defmodule LiveViewGrid.Utils do
   """
   @spec set_columns(map(), Phoenix.LiveView.Socket.t()) :: {:noreply, Phoenix.LiveView.Socket.t()}
   def set_columns(%{"columns" => columns} = _params, socket) do
-    cols =
-      for c <- columns do
-        {Map.get(socket.assigns.cols_cache, c), c}
-      end
-
+    Logger.debug("re-organizing columns")
+    sorter = column_sorter(columns)
+    cols = socket.assigns.cols |> Enum.sort_by(sorter)
     {:noreply, socket |> assign(:cols, cols)}
   end
 
