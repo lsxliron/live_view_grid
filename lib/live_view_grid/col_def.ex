@@ -64,7 +64,7 @@ defmodule LiveViewGrid.ColDef do
   """
   @spec add_formatter(t()) :: t()
   def add_formatter(%__MODULE__{formatter: nil} = coldef) do
-    Map.put(coldef, :formatter, fn v -> v end)
+    Map.put(coldef, :formatter, fn v, _row -> v end)
   end
 
   def add_formatter(%__MODULE__{formatter: f} = coldef) when not is_nil(f) do
