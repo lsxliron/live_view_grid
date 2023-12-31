@@ -1,4 +1,4 @@
-defmodule LiveViewGrid.Behaviours.BaseFilter do
+defmodule LiveViewGrid.Behaviours.BaseFilterComponent do
   @callback get_options(map) :: keyword()
   @callback on_change(
               Phoenix.LiveView.unsigned_params(),
@@ -107,7 +107,7 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
       @doc false
       def on_change(params, socket) do
         # a helper function to make it possible to override the default implementation of on_change
-        LiveViewGrid.Behaviours.BaseFilter.default_on_change(
+        LiveViewGrid.Behaviours.BaseFilterComponent.default_on_change(
           params,
           @filter_type,
           @default_filter_type,
@@ -120,7 +120,7 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
       @doc false
       def on_clear(params, socket) do
         # a helper function to make it possible to override the default implementation of on_clear
-        LiveViewGrid.Behaviours.BaseFilter.default_on_clear(
+        LiveViewGrid.Behaviours.BaseFilterComponent.default_on_clear(
           params,
           @filter_type,
           @default_filter_type,
@@ -163,7 +163,7 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
       `socket` - the LiveView socket
       `filter` - the new filter struct to update
       """
-      @spec update_filter_in_column(Phoenix.LiveView.Socket.t(), LiveViewGrid.Behaviours.BaseFilter.filter()) ::
+      @spec update_filter_in_column(Phoenix.LiveView.Socket.t(), LiveViewGrid.Behaviours.BaseFilterComponent.filter()) ::
               Phoenix.LiveView.Socket.t()
       def update_filter_in_column(socket, filter) do
         send(socket.assigns.parent, {:update_filter, socket.assigns.field_name, filter})

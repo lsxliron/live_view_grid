@@ -1,6 +1,6 @@
 defmodule LiveViewGrid.Components.NumberFilter do
   use Phoenix.LiveComponent
-  use LiveViewGrid.Behaviours.BaseFilter, default_filter_type: "greater", filter_type: :number
+  use LiveViewGrid.Behaviours.BaseFilterComponent, default_filter_type: "greater", filter_type: :number
 
   def get_options() do
     [

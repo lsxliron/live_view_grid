@@ -1,6 +1,6 @@
 defmodule LiveViewGrid.Components.TextFilter do
   use Phoenix.LiveComponent
-  use LiveViewGrid.Behaviours.BaseFilter, default_filter_type: "contains", filter_type: :text
+  use LiveViewGrid.Behaviours.BaseFilterComponent, default_filter_type: "contains", filter_type: :text
 
   def get_options() do
     [
