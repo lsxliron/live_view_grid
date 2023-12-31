@@ -90,7 +90,7 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
         filter_params = on_change(params, socket)
         filter = @filter_type |> LiveViewGrid.Utils.get_filter_module() |> struct(filter_params)
         Process.send_after(socket.assigns.parent, :perform_filter, 500)
-        {:noreply, socket |> update_filter_in_coldef(filter) |> assign(filter_params)}
+        {:noreply, socket |> update_filter_in_column(filter) |> assign(filter_params)}
       end
 
       @impl Phoenix.LiveComponent
@@ -105,10 +105,10 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
         filter = @filter_type |> LiveViewGrid.Utils.get_filter_module() |> struct(filter_params)
         Process.send_after(socket.assigns.parent, :perform_filter, 100)
 
-        {:noreply, socket |> update_filter_in_coldef(filter) |> assign(filter_params)}
+        {:noreply, socket |> update_filter_in_column(filter) |> assign(filter_params)}
       end
 
-      def update_filter_in_coldef(socket, filter) do
+      def update_filter_in_column(socket, filter) do
         send(socket.assigns.parent, {:update_filter, socket.assigns.field_name, filter})
         socket
       end

@@ -30,3 +30,4 @@ live_view_grid-*.tar
 
 .DS_Store
 node_modules
+.vscode

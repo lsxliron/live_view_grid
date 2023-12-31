@@ -1,10 +1,8 @@
-# cspell: ignore coldef
-defmodule LiveViewGrid.ColDef do
+defmodule LiveViewGrid.Column do
   @moduledoc """
   A column definition module
   """
 
-  #TODO: rename module to column
   @type data_type :: :text | :date | :number
 
   @typedoc """

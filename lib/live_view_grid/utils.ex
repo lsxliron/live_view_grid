@@ -400,7 +400,7 @@ defmodule LiveViewGrid.Utils do
   """
   @spec init_grid(Phoenix.LiveView.Socket.t(), list(tuple)) :: Phoenix.LiveView.Socket.t()
   def init_grid(socket, cols) do
-    initialized_cols = cols |> Enum.map(&LiveViewGrid.ColDef.init/1)
+    initialized_cols = cols |> Enum.map(&LiveViewGrid.Column.init/1)
 
     socket
     |> assign(:cols, initialized_cols)
