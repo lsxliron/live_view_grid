@@ -34,11 +34,15 @@ defmodule LiveViewGrid.Filters.Text do
   end
 
   def get_subquery("equals", value, field_name) do
-    %{field_name => %{"$eq": value}}
+    # %{field_name => %{"$eq": value}}
+    # using regex instead of $eq so queries wont be case-sensitive
+    %{field_name =>  %{"$regex": "^#{value}$", "$options": "i"}}
   end
 
   def get_subquery("not_equals", value, field_name) do
-    %{field_name => %{"$ne": value}}
+    # %{field_name => %{"$ne": value}}
+    # using regex instead of $ne so queries wont be case-sensitive
+    %{field_name => %{"$not": %{"$regex": "^#{value}$", "$options": "i"}}}
   end
 
   def get_subquery("blank", _value, field_name) do
