@@ -1,4 +1,4 @@
-defmodule LiveViewGridWeb.Behaviours.BaseFilter do
+defmodule LiveViewGrid.Behaviours.BaseFilter do
   @callback get_options() :: keyword()
 
   defmacro __using__(opts) do

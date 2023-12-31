@@ -1,6 +1,6 @@
 defmodule LiveViewGrid.Components.DateFilter do
   use Phoenix.LiveComponent
-  use LiveViewGridWeb.Behaviours.BaseFilter, default_filter_type: "before", filter_type: :date
+  use LiveViewGrid.Behaviours.BaseFilter, default_filter_type: "before", filter_type: :date
   require Logger
 
   def get_options() do
