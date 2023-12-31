@@ -73,6 +73,26 @@ defmodule LiveViewGridWeb.Behaviours.BaseFilter do
         {:noreply, socket |> assign(:visible, false)}
       end
 
+      @impl Phoenix.LiveComponent
+      def handle_event("clear_filter", _params, socket) do
+        filter_params = %{
+          filter_value_1: "",
+          filter_type_1: @default_filter_type,
+          filter_value_2: "",
+          filter_type_2: @default_filter_type,
+          enabled: false,
+          combinator: "and"
+        }
+
+        filter = @filter_type |> get_filter_module() |> struct(filter_params)
+        Process.send_after(socket.assigns.parent, :perform_filter, 100)
+
+        {:noreply,
+         socket
+         |> update_filter_in_coldef(filter)
+         |> assign(filter_params)}
+      end
+
       def update_filter_in_coldef(socket, filter) do
         send(socket.assigns.parent, {:update_filter, socket.assigns.field_name, filter})
         socket
@@ -88,9 +108,14 @@ defmodule LiveViewGridWeb.Behaviours.BaseFilter do
         ~H"""
         <form class="relative block h-2" phx-change="change" phx-target={@myself}>
           <%= if @visible do %>
-            <div class="w-full min-w-36 absolute z-10 m-2 m-8 -translate-y-8 rounded-md border border-black bg-white p-2 p-2 text-center shadow-lg">
+            <div class="min-w-36 absolute z-10 m-2 m-8 w-full -translate-y-8 rounded-md border border-black bg-white p-2 p-2 text-center shadow-lg">
               <div class="flex items-baseline justify-between">
                 <p class="tex-sm mb-2 text-black">Filters for <%= @column_name %></p>
+                <button type="button" phx-click="clear_filter" phx-target={@myself}>
+                  <span class="material-symbols-outlined text-xs hover:text-black/80">
+                    restart_alt
+                  </span>
+                </button>
                 <button type="button" phx-click="hide_filter" phx-target={@myself}>
                   <span class="material-symbols-outlined text-xs hover:text-black/80">
                     close

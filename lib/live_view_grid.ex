@@ -50,7 +50,7 @@ defmodule LiveViewGrid do
       <div class="h-[90vh] max-h-[90vh] draggable-table-root block flow-root w-full w-fit overflow-auto text-sm">
         <div>
           <div id="table" class="inline-flex bg-white p-2.5" phx-hook="Draggable" id={@id}>
-            <%= for %LiveViewGrid.ColDef{field: col_attr, header: col_name, data_type: data_type, formatter: formatter} <- @cols do %>
+            <%= for %LiveViewGrid.ColDef{field: col_attr, header: col_name, data_type: data_type, formatter: formatter, filter: filter} <- @cols do %>
               <div class="sortable-table-column" x-data={"{#{col_attr}_open: false}"}>
                 <div class="sticky top-0 z-10 bg-white bg-opacity-75">
                   <div
@@ -78,7 +78,10 @@ defmodule LiveViewGrid do
                     <% end %>
                     <div>
                       <span
-                        class="material-symbols-outlined text-sm hover:cursor-pointer"
+                        class={[
+                          "material-symbols-outlined text-sm hover:cursor-pointer",
+                          if(filter.enabled, do: "text-sky-500", else: "")
+                        ]}
                         phx-click="show_filter"
                         phx-target={@myself}
                         phx-value-field_name={"filter_#{col_attr}"}
