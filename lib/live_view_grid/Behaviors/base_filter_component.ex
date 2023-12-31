@@ -207,7 +207,7 @@ defmodule LiveViewGrid.Behaviours.BaseFilterComponent do
                 value={@filter_value_1}
               />
 
-              <%= if not is_nil(@filter_value_1) and String.trim(@filter_value_1) != "" do %>
+              <%= if @filter_type_1 in ["blank", "not_blank"] or (not is_nil(@filter_value_1) and String.trim(@filter_value_1) != "") do %>
                 <div class="mb-1 flex justify-center gap-4">
                   <div>
                     <input
