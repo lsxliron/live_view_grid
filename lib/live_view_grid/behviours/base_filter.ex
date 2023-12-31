@@ -13,6 +13,31 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
               Phoenix.LiveView.Socket.t()
             ) :: map()
 
+  @type filter_params ::
+          LiveViewGrid.Filters.Text.filter_params()
+          | LiveViewGrid.Filters.Number.filter_params()
+          | LiveViewGrid.Filters.Date.filter_params()
+
+  @type filter ::
+          LiveViewGrid.Filters.Text.t()
+          | LiveViewGrid.Filters.Number.t()
+          | LiveViewGrid.Filters.Date.t()
+
+  @doc """
+  A default implementation for the `on_change` callback which is being fired every time a filter is changed
+
+  ## Parameters
+  - `params` - the LiveView params
+  - `filter_type` - the affected filter type, can be one of `:date`, `:number` or `:text`
+  - `default_filter_type` the default selection of the filter dropdown (all options should be specified in the `get_options/0` callback)
+  - `socket` - the LiveView socket
+  """
+  @spec default_on_change(
+          Phoenix.LiveView.unsigned_params(),
+          LiveViewGrid.Column.data_type(),
+          String.t(),
+          Phoenix.LiveView.Socket.t()
+        ) :: filter_params()
   def default_on_change(params, _filter_type, _default_filter_type, socket) do
     filter_value_1 = params |> Map.get("filter_value_1", socket.assigns.filter_value_1)
     filter_value_2 = params |> Map.get("filter_value_2", socket.assigns.filter_value_2)
@@ -30,6 +55,22 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
       combinator: combinator
     }
   end
+
+  @doc """
+  A default implementation for the `on_change` callback which is being fired every time a filter is cleared
+
+  ## Parameters
+  - `params` - the LiveView params
+  - `filter_type` - the affected filter type, can be one of `:date`, `:number` or `:text`
+  - `default_filter_type` the default selection of the filter dropdown (all options should be specified in the `get_options/0` callback)
+  - `socket` - the LiveView socket
+  """
+  @spec default_on_clear(
+          Phoenix.LiveView.unsigned_params(),
+          LiveViewGrid.Column.data_type(),
+          String.t(),
+          Phoenix.LiveView.Socket.t()
+        ) :: filter_params()
 
   def default_on_clear(_params, _filter_type, default_filter_type, _socket) do
     %{
@@ -63,7 +104,9 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
          |> assign(:visible, false)}
       end
 
+      @doc false
       def on_change(params, socket) do
+        # a helper function to make it possible to override the default implementation of on_change
         LiveViewGrid.Behaviours.BaseFilter.default_on_change(
           params,
           @filter_type,
@@ -74,7 +117,9 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
 
       defoverridable on_change: 2
 
+      @doc false
       def on_clear(params, socket) do
+        # a helper function to make it possible to override the default implementation of on_clear
         LiveViewGrid.Behaviours.BaseFilter.default_on_clear(
           params,
           @filter_type,
@@ -87,6 +132,7 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
 
       @impl Phoenix.LiveComponent
       def handle_event("change", params, socket) do
+        # fires every time the filter value is changed
         filter_params = on_change(params, socket)
         filter = @filter_type |> LiveViewGrid.Utils.get_filter_module() |> struct(filter_params)
         Process.send_after(socket.assigns.parent, :perform_filter, 500)
@@ -95,11 +141,13 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
 
       @impl Phoenix.LiveComponent
       def handle_event("hide_filter", _params, socket) do
+        # fires every time the filter is closed
         {:noreply, socket |> assign(:visible, false)}
       end
 
       @impl Phoenix.LiveComponent
       def handle_event("clear_filter", params, socket) do
+        # fires every time the filter is cleared
         filter_params = on_clear(socket, params)
 
         filter = @filter_type |> LiveViewGrid.Utils.get_filter_module() |> struct(filter_params)
@@ -108,6 +156,15 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
         {:noreply, socket |> update_filter_in_column(filter) |> assign(filter_params)}
       end
 
+      @doc """
+      Updates the filter in the parent LiveView socket
+
+      ## Parameters
+      `socket` - the LiveView socket
+      `filter` - the new filter struct to update
+      """
+      @spec update_filter_in_column(Phoenix.LiveView.Socket.t(), LiveViewGrid.Behaviours.BaseFilter.filter()) ::
+              Phoenix.LiveView.Socket.t()
       def update_filter_in_column(socket, filter) do
         send(socket.assigns.parent, {:update_filter, socket.assigns.field_name, filter})
         socket

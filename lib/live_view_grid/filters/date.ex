@@ -7,6 +7,23 @@ defmodule LiveViewGrid.Filters.Date do
             enabled: false,
             combinator: "and"
 
+  @type t :: %__MODULE__{
+          filter_value_1: String.t(),
+          filter_type_1: String.t(),
+          filter_value_2: String.t(),
+          filter_type_2: String.t(),
+          enabled: boolean(),
+          combinator: String.t()
+        }
+  @type filter_params :: %{
+          filter_value_1: String.t(),
+          filter_type_1: String.t(),
+          filter_value_2: String.t(),
+          filter_type_2: String.t(),
+          enabled: boolean(),
+          combinator: String.t()
+        }
+
   def get_query(%__MODULE__{enabled: false}, _field_name), do: nil
 
   def get_query(%__MODULE__{filter_value_1: value1, filter_value_2: value2} = filter, field_name)
