@@ -112,10 +112,10 @@ defmodule LiveViewGrid.Filters.Date do
   end
 
   def get_subquery("blank", _value, field_name) do
-    %{field_name => %{"$exists": false}}
+    %{"$or": [%{field_name => %{"$exists": false}}, %{field_name => %{"$eq": nil}}]}
   end
 
   def get_subquery("not_blank", _value, field_name) do
-    %{field_name => %{"$exists": true}}
+    %{"$and": [%{field_name => %{"$exists": true}}, %{field_name => %{"$ne": nil}}]}
   end
 end
