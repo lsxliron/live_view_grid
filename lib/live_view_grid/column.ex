@@ -12,17 +12,19 @@ defmodule LiveViewGrid.Column do
   - `header` - the title that the column will have (whatever value will be displayed to the user)
   - `formatter` - a function that can manipulate the value (for example add currency to prices)
   - `filter` - a filter object (docs TBD)
+  - `disable_filter` - false by default, if true will hide the filter on the UI
   """
   @type t :: %__MODULE__{
           field: String.t(),
           header: String.t(),
           formatter: fun(),
           filter: any(),
-          data_type: data_type()
+          data_type: data_type(),
+          disable_filter: boolean()
         }
 
   @enforce_keys [:field, :data_type]
-  defstruct [:field, :header, :formatter, :filter, data_type: :text]
+  defstruct [:field, :header, :formatter, :filter, data_type: :text, disable_filter: false]
 
   @doc """
   initializes the column def with default values
