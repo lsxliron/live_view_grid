@@ -446,7 +446,7 @@ defmodule LiveViewGrid.Utils do
           %{
             "$addFields": %{
               page: 1,
-              total_pages: %{"$floor": %{"$divide": ["$total", per_page]}}
+              total_pages: %{"$ceil": %{"$divide": ["$total", per_page]}}
             }
           }
         ]
