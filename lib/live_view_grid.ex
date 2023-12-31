@@ -6,12 +6,13 @@ defmodule LiveViewGrid do
   A tabular grid to render data
   """
 
-  def get_filter_component_for_type(:text), do: LiveViewGrid.Components.TextFilter
-  def get_filter_component_for_type("text"), do: LiveViewGrid.Components.TextFilter
-  def get_filter_component_for_type(:date), do: LiveViewGrid.Components.DateFilter
-  def get_filter_component_for_type("date"), do: LiveViewGrid.Components.DateFilter
-  def get_filter_component_for_type(:number), do: LiveViewGrid.Components.NumberFilter
-  def get_filter_component_for_type("number"), do: LiveViewGrid.Components.NumberFilter
+  def get_filter_component_for_type(m) do
+    case m do
+      v when v in ["text", :text] -> LiveViewGrid.Components.TextFilter
+      v when v in ["date", :date] -> LiveViewGrid.Components.DateFilter
+      v when v in ["number", :number] -> LiveViewGrid.Components.NumberFilter
+    end
+  end
 
   def handle_event(
         "show_filter",
