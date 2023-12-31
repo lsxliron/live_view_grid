@@ -13,6 +13,8 @@ defmodule LiveViewGrid.Filters.Text do
      if both its `filter_values` are empty
   - `combinator` - in case the second condition is enabled (e.g. `filter_value_2` is non-empty), how the filters will be combined (`or`, or `and`)
   """
+
+  @behaviour LiveViewGrid.Behaviours.BaseFilter
   defstruct filter_value_1: "",
             filter_type_1: "contains",
             filter_value_2: "",
