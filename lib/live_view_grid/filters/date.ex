@@ -1,5 +1,18 @@
 # cspell: ignore subquery
 defmodule LiveViewGrid.Filters.Date do
+  @moduledoc """
+  This is a date filter object which holds all the required information in order to extract a meaningful to generate a filter query.
+  A filter object may have at most two conditions that can be combined using a `or`/ `and` logical operators.
+
+  A filter object have the following attributes:
+  - `filter_value_1` - the lookup values of the first condition
+  - `filter_type_1` - the query type. In a `DateFilter` context, this might be before, after, equals, not equals, blank or not blank
+  - `filter_value_2` - same as `filter_value_1`
+  - `filter_type_2` - same as `filter_type_1`
+  - `enabled` - wether or not the filter is enabled or not. This field is automatically changing based on the filter values. A filter is disabled
+     if both its `filter_values` are empty
+  - `combinator` - in case the second condition is enabled (e.g. `filter_value_2` is non-empty), how the filters will be combined (`or`, or `and`)
+  """
   defstruct filter_value_1: "",
             filter_type_1: "before",
             filter_value_2: "",
@@ -24,6 +37,14 @@ defmodule LiveViewGrid.Filters.Date do
           combinator: String.t()
         }
 
+  @doc """
+  Returns the query that is required in order to fulfill the filter conditions
+
+  ## Parameters
+  - `filter` - the filter to get the query for
+  - `field_name` - the field name that the query applies to
+  """
+  @spec get_query(t(), String.t()) :: map() | nil
   def get_query(%__MODULE__{enabled: false}, _field_name), do: nil
 
   def get_query(%__MODULE__{filter_value_1: value1, filter_value_2: value2} = filter, field_name)
@@ -42,10 +63,30 @@ defmodule LiveViewGrid.Filters.Date do
     end
   end
 
+  @doc """
+  Parses a string to a DateTime. The string should be in `YYYY-MM-DD` format
+
+  ## Parameters
+  - `d` - the string to parse
+
+  ## Examples
+  ```
+     iex> parse("2020-11-10")
+     ~U[2020-11-10 00:00:00Z]
+  ```
+  """
   def parse(d) do
     d |> Timex.parse!("%Y-%m-%d", :strftime) |> Timex.to_datetime()
   end
 
+  @doc """
+  constructs the query based on the search condition (first parameter), value and field name
+
+  ## Parameters
+  - `value` - the search value
+  - `field_name` - the field name to apply the query on
+  """
+  @spec get_subquery(String.t(), String.t(), String.t()) :: map()
   def get_subquery("after", value, field_name) do
     %{field_name => %{"$gt": Timex.end_of_day(parse(value))}}
   end

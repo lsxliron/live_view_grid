@@ -1,5 +1,19 @@
 # cspell: ignore subquery
 defmodule LiveViewGrid.Filters.Number do
+  @moduledoc """
+  This is a number filter object which holds all the required information in order to extract a meaningful to generate a filter query.
+  A filter object may have at most two conditions that can be combined using a `or`/ `and` logical operators.
+
+  A filter object have the following attributes:
+  - `filter_value_1` - the lookup values of the first condition
+  - `filter_type_1` - the query type. In a `NumberFilter` context, this might be greater then, greater than or equal, less then, less than or equal,
+     equals, not equals, blank or not blank
+  - `filter_value_2` - same as `filter_value_1`
+  - `filter_type_2` - same as `filter_type_1`
+  - `enabled` - wether or not the filter is enabled or not. This field is automatically changing based on the filter values. A filter is disabled
+     if both its `filter_values` are empty
+  - `combinator` - in case the second condition is enabled (e.g. `filter_value_2` is non-empty), how the filters will be combined (`or`, or `and`)
+  """
   defstruct filter_value_1: "",
             filter_type_1: "greater",
             filter_value_2: "",
@@ -24,6 +38,14 @@ defmodule LiveViewGrid.Filters.Number do
           combinator: String.t()
         }
 
+  @doc """
+  Returns the query that is required in order to fulfill the filter conditions
+
+  ## Parameters
+  - `filter` - the filter to get the query for
+  - `field_name` - the field name that the query applies to
+  """
+  @spec get_query(t(), String.t()) :: map() | nil
   def get_query(%__MODULE__{enabled: false}, _field_name), do: nil
 
   def get_query(%__MODULE__{filter_value_1: value1, filter_value_2: value2} = filter, field_name)
@@ -42,6 +64,25 @@ defmodule LiveViewGrid.Filters.Number do
     end
   end
 
+  @doc """
+  Parses a string to a number
+
+  ## Parameters
+  - `n` - the string to parse
+
+  ## Examples
+  ```
+     iex> parse("")
+     0
+     iex> parse(nil)
+     0
+     iex> parse("12")
+     12
+     iex> parse("1.2")
+     1.2
+  ```
+  """
+  @spec parse(String.t() | nil) :: number()
   def parse(""), do: 0
   def parse(nil), do: 0
 
@@ -53,6 +94,14 @@ defmodule LiveViewGrid.Filters.Number do
     end
   end
 
+  @doc """
+  constructs the query based on the search condition (first parameter), value and field name
+
+  ## Parameters
+  - `value` - the search value
+  - `field_name` - the field name to apply the query on
+  """
+  @spec get_subquery(String.t(), String.t(), String.t()) :: map()
   def get_subquery("greater", value, field_name) do
     %{field_name => %{"$gt": parse(value)}}
   end
