@@ -453,4 +453,12 @@ defmodule LiveViewGrid.Utils do
       }
     }
   end
+
+  def get_filter_module(m) do
+    case m do
+      v when v in ["test", :text] -> LiveViewGrid.Filters.Text
+      v when v in ["date", :date] -> LiveViewGrid.Filters.Date
+      v when v in ["number", :number] -> LiveViewGrid.Filters.Number
+    end
+  end
 end
