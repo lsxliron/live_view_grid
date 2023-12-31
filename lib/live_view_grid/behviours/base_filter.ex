@@ -1,5 +1,46 @@
 defmodule LiveViewGrid.Behaviours.BaseFilter do
-  @callback get_options() :: keyword()
+  @callback get_options(map) :: keyword()
+  @callback on_change(
+              Phoenix.LiveView.unsigned_params(),
+              atom(),
+              String.t(),
+              Phoenix.LiveView.Socket.t()
+            ) :: map()
+  @callback on_clear(
+              Phoenix.LiveView.unsigned_params(),
+              atom(),
+              String.t(),
+              Phoenix.LiveView.Socket.t()
+            ) :: map()
+
+  def default_on_change(params, _filter_type, _default_filter_type, socket) do
+    filter_value_1 = params |> Map.get("filter_value_1", socket.assigns.filter_value_1)
+    filter_value_2 = params |> Map.get("filter_value_2", socket.assigns.filter_value_2)
+    filter_type_1 = params |> Map.get("filter_type_1", socket.assigns.filter_type_1)
+    filter_type_2 = params |> Map.get("filter_type_2", socket.assigns.filter_type_2)
+    combinator = params |> Map.get("combinator", socket.assigns.combinator)
+    enabled = String.trim(filter_value_1) != "" or filter_type_1 in ["not_blank", "blank"]
+
+    %{
+      filter_value_1: filter_value_1,
+      filter_type_1: filter_type_1,
+      filter_value_2: filter_value_2,
+      filter_type_2: filter_type_2,
+      enabled: enabled,
+      combinator: combinator
+    }
+  end
+
+  def default_on_clear(_params, _filter_type, default_filter_type, _socket) do
+    %{
+      filter_value_1: "",
+      filter_type_1: default_filter_type,
+      filter_value_2: "",
+      filter_type_2: default_filter_type,
+      enabled: false,
+      combinator: "and"
+    }
+  end
 
   defmacro __using__(opts) do
     quote location: :keep, bind_quoted: [opts: opts] do
@@ -22,50 +63,34 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
          |> assign(:visible, false)}
       end
 
-      # TODO: put in utils
-      def get_filter_module(:text) do
-        LiveViewGrid.Filters.Text
+      def on_change(params, socket) do
+        LiveViewGrid.Behaviours.BaseFilter.default_on_change(
+          params,
+          @filter_type,
+          @default_filter_type,
+          socket
+        )
       end
 
-      def get_filter_module(:number) do
-        LiveViewGrid.Filters.Number
+      defoverridable on_change: 2
+
+      def on_clear(params, socket) do
+        LiveViewGrid.Behaviours.BaseFilter.default_on_clear(
+          params,
+          @filter_type,
+          @default_filter_type,
+          socket
+        )
       end
 
-      def get_filter_module(:date) do
-        LiveViewGrid.Filters.Date
-      end
+      defoverridable on_clear: 2
 
       @impl Phoenix.LiveComponent
       def handle_event("change", params, socket) do
-        filter_value_1 = params |> Map.get("filter_value_1", socket.assigns.filter_value_1)
-        filter_value_2 = params |> Map.get("filter_value_2", socket.assigns.filter_value_2)
-        filter_type_1 = params |> Map.get("filter_type_1", socket.assigns.filter_type_1)
-        filter_type_2 = params |> Map.get("filter_type_2", socket.assigns.filter_type_2)
-        combinator = params |> Map.get("combinator", socket.assigns.combinator)
-        enabled = String.trim(filter_value_1) != "" or filter_type_1 in ["not_blank", "blank"]
-
-        filter_params = %{
-          filter_value_1: filter_value_1,
-          filter_type_1: filter_type_1,
-          filter_value_2: filter_value_2,
-          filter_type_2: filter_type_2,
-          enabled: enabled,
-          combinator: combinator
-        }
-
-        filter = @filter_type |> get_filter_module() |> struct(filter_params)
-
+        filter_params = on_change(params, socket)
+        filter = @filter_type |> LiveViewGrid.Utils.get_filter_module() |> struct(filter_params)
         Process.send_after(socket.assigns.parent, :perform_filter, 500)
-
-        {:noreply,
-         socket
-         |> update_filter_in_coldef(filter)
-         |> assign(:filter_value_1, filter_value_1)
-         |> assign(:filter_type_1, filter_type_1)
-         |> assign(:filter_value_2, filter_value_2)
-         |> assign(:filter_type_2, filter_type_2)
-         |> assign(:combinator, combinator)
-         |> assign(:enabled, enabled)}
+        {:noreply, socket |> update_filter_in_coldef(filter) |> assign(filter_params)}
       end
 
       @impl Phoenix.LiveComponent
@@ -74,23 +99,13 @@ defmodule LiveViewGrid.Behaviours.BaseFilter do
       end
 
       @impl Phoenix.LiveComponent
-      def handle_event("clear_filter", _params, socket) do
-        filter_params = %{
-          filter_value_1: "",
-          filter_type_1: @default_filter_type,
-          filter_value_2: "",
-          filter_type_2: @default_filter_type,
-          enabled: false,
-          combinator: "and"
-        }
+      def handle_event("clear_filter", params, socket) do
+        filter_params = on_clear(socket, params)
 
-        filter = @filter_type |> get_filter_module() |> struct(filter_params)
+        filter = @filter_type |> LiveViewGrid.Utils.get_filter_module() |> struct(filter_params)
         Process.send_after(socket.assigns.parent, :perform_filter, 100)
 
-        {:noreply,
-         socket
-         |> update_filter_in_coldef(filter)
-         |> assign(filter_params)}
+        {:noreply, socket |> update_filter_in_coldef(filter) |> assign(filter_params)}
       end
 
       def update_filter_in_coldef(socket, filter) do
