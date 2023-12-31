@@ -398,7 +398,7 @@ defmodule LiveViewGrid.Utils do
   - `:total_pages` - total number of pages
   - `:total_rows` - total number of rows
   """
-  @spec init_grid(Phoenix.LiveView.Socket.t(), list(tuple)) :: Phoenix.LiveView.Socket.t()
+  @spec init_grid(Phoenix.LiveView.Socket.t(), list(LiveViewGrid.Column.t())) :: Phoenix.LiveView.Socket.t()
   def init_grid(socket, cols) do
     initialized_cols = cols |> Enum.map(&LiveViewGrid.Column.init/1)
 
