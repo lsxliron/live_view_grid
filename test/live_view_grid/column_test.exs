@@ -65,7 +65,7 @@ defmodule LiveViewGrid.ColumnTest do
     end
 
     test "has an identity formatter when one not provided", %{col: col} do
-      col.formatter.("value", %{}) == "value"
+      assert col.formatter.("value", %{}) == "value"
     end
 
     test "has an custom formatter" do
@@ -79,7 +79,7 @@ defmodule LiveViewGrid.ColumnTest do
         }
         |> Column.init()
 
-      col.formatter.("value", %{}) == "!value!"
+      assert col.formatter.("value", %{}) == "!value!"
     end
   end
 end
