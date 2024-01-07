@@ -101,7 +101,7 @@ defmodule LiveViewGrid.Filters.Date do
   def get_subquery("equals", value, field_name) do
     %{
       "$and": [
-        %{field_name => %{"$gte": parse(value)}},
+        %{field_name => %{"$gte": Timex.beginning_of_day(parse(value))}},
         %{field_name => %{"$lte": Timex.end_of_day(parse(value))}}
       ]
     }
@@ -109,6 +109,13 @@ defmodule LiveViewGrid.Filters.Date do
 
   def get_subquery("not_equals", value, field_name) do
     %{field_name => %{"$eq": parse(value)}}
+
+    %{
+      "$or": [
+        %{field_name => %{:"$gt" => Timex.end_of_day(parse(value))}},
+        %{field_name => %{:"$lt" => Timex.beginning_of_day(parse(value))}}
+      ]
+    }
   end
 
   def get_subquery("blank", _value, field_name) do
