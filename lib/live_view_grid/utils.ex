@@ -427,7 +427,7 @@ defmodule LiveViewGrid.Utils do
     "$facet": %{
       pagination: [
         %{"$count": "total"},
-        %{"$addFields": %{page: 1, total_pages: %{"$floor": %{"$divide": ["$total", 50]}}}}
+        %{"$addFields": %{page: 1, total_pages: %{"$ceil": %{"$divide": ["$total", 50]}}}}
       ],
       results: [%{"$skip": 0}, %{"$limit": 50}]
     }
