@@ -17,3 +17,10 @@ config :esbuild,
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
+
+  config :logger, :console,
+  format: "$time [$level] [$metadata] $message\n",
+  metadata: [:request_id, :mfa, :file, :line],
+  level: :debug
+
+import_config "#{config_env()}.exs"
