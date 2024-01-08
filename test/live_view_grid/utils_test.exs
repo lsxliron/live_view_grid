@@ -1,13 +1,14 @@
 defmodule LiveViewGrid.UtilsTest do
   use ExUnit.Case, async: true
   doctest LiveViewGrid.Utils, import: true
+
   import Phoenix.Component, only: [assign: 3]
 
   @cols [
-    {"a", "A"},
-    {"b", "B"},
-    {"c", "C"},
-    {"d", "D"}
+    %LiveViewGrid.Column{field: "a", header: "A", data_type: :text},
+    %LiveViewGrid.Column{field: "b", header: "B", data_type: :text},
+    %LiveViewGrid.Column{field: "c", header: "C", data_type: :text},
+    %LiveViewGrid.Column{field: "d", header: "D", data_type: :text}
   ]
 
   defp get_socket() do
@@ -41,20 +42,13 @@ defmodule LiveViewGrid.UtilsTest do
   describe "initializing grid properly" do
     test "initializing with defaults" do
       socket = get_socket()
-      assert socket.assigns.cols == @cols
+      assert socket.assigns.cols |> Enum.map(& &1.field) == ["a", "b", "c", "d"]
       assert socket.assigns.current_page == 1
       assert socket.assigns.filter_by == %{}
       assert socket.assigns.order_by == OrdMap.new(%{})
       assert socket.assigns.per_page == 100
       assert socket.assigns.total_pages == 1
       assert socket.assigns.total_rows == 1
-
-      assert socket.assigns.cols_cache == %{
-               "A" => "a",
-               "B" => "b",
-               "C" => "c",
-               "D" => "d"
-             }
     end
 
     test "initializing with custom values" do
@@ -76,7 +70,7 @@ defmodule LiveViewGrid.UtilsTest do
     {:noreply, socket} =
       LiveViewGrid.Utils.set_columns(%{"columns" => ["D", "C", "B", "A"]}, socket)
 
-    assert socket.assigns.cols == Enum.reverse(@cols)
+    assert socket.assigns.cols |> Enum.map(& &1.field) == ["d", "c", "b", "a"]
   end
 
   test "can update filters properly" do
@@ -199,5 +193,14 @@ defmodule LiveViewGrid.UtilsTest do
 
     {:noreply, socket} = LiveViewGrid.Utils.update_sort(%{"column" => "a"}, socket)
     assert socket.assigns.order_by == OrdMap.new(%{b: 1})
+  end
+
+  test "get_filter_module/1" do
+    assert LiveViewGrid.Utils.get_filter_module("text") == LiveViewGrid.Filters.Text
+    assert LiveViewGrid.Utils.get_filter_module(:text) == LiveViewGrid.Filters.Text
+    assert LiveViewGrid.Utils.get_filter_module("date") == LiveViewGrid.Filters.Date
+    assert LiveViewGrid.Utils.get_filter_module(:date) == LiveViewGrid.Filters.Date
+    assert LiveViewGrid.Utils.get_filter_module("number") == LiveViewGrid.Filters.Number
+    assert LiveViewGrid.Utils.get_filter_module(:number) == LiveViewGrid.Filters.Number
   end
 end

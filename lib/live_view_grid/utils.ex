@@ -101,35 +101,6 @@ defmodule LiveViewGrid.Utils do
   ## Parameters
   - `query` - the aggregation query
   - `socket` - the socket to get the `assigns` from
-
-  ## Example
-  ```
-  iex> filter_by = %{col1: "ab"}
-  iex> socket = %Phoenix.LiveView.Socket{} |> Phoenix.Component.assign(:filter_by, filter_by)
-  iex> query = [%{
-  ...>   "$project": %{
-  ...>     _id: 1,
-  ...>     col1: 1,
-  ...>     col2: 2
-  ...>   }
-  ...> }]
-  iex(4)> add_basic_filter(query, socket)
-  [
-    %{
-      "$match": %{
-        "$and": [
-          %{col1: %{"$regex": ".*ab.*", "$options": "i" }}
-        ]
-      }
-    },
-    %{
-      "$project": %{
-        _id: 1,
-        col1: 1,
-        col2: 2
-      }
-    }
-  ]
   ```
   """
   @spec add_basic_filter(list(), Phoenix.LiveView.Socket.t()) :: list()
@@ -263,9 +234,9 @@ defmodule LiveViewGrid.Utils do
   end
 
   @spec column_sorter(list(String.t())) :: fun()
-  def column_sorter(all_column) do
+  def column_sorter(all_columns) do
     fn col_def ->
-      Enum.find_index(all_column, &(col_def.header == &1))
+      Enum.find_index(all_columns, &(col_def.header == &1))
     end
   end
 
@@ -454,9 +425,17 @@ defmodule LiveViewGrid.Utils do
     }
   end
 
-  def get_filter_module(m) do
-    case m do
-      v when v in ["test", :text] -> LiveViewGrid.Filters.Text
+  @doc """
+  Returns the proper filter module based on the provided filter type.
+  Valid filter types are `:text`, `"test"`, `:date`, `"date"` `:number` and `"number"`
+
+  ## Parameters
+  - `m` - the filter_type type
+  """
+  @spec get_filter_module(String.t() | atom()) :: module()
+  def get_filter_module(filter_type) do
+    case filter_type do
+      v when v in ["text", :text] -> LiveViewGrid.Filters.Text
       v when v in ["date", :date] -> LiveViewGrid.Filters.Date
       v when v in ["number", :number] -> LiveViewGrid.Filters.Number
     end
