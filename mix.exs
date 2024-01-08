@@ -6,6 +6,7 @@ defmodule LiveViewGrid.MixProject do
       app: :live_view_grid,
       version: "0.0.1-alpha",
       elixir: "~> 1.14",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
@@ -31,6 +32,10 @@ defmodule LiveViewGrid.MixProject do
     ]
   end
 
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
@@ -42,7 +47,8 @@ defmodule LiveViewGrid.MixProject do
       {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
       {:tailwind_formatter, "~> 0.3.6", only: [:dev, :test], runtime: false},
-      {:timex, "~> 3.7"}
+      {:timex, "~> 3.7"},
+      {:floki, "~> 0.30", only: :test}
     ]
   end
 
